@@ -61,20 +61,20 @@ MovieLens provided three tables:
 ### Enrichment
 
 To provide the model with a broader context of user preferences beyond movie genres, I utilized TMDB's generous developer API to fetch movie descriptions, actors and directors.
-Additionally, movie posters were also saved to visually improve the user experience in the final web application.
+Additionally, movie posters were saved to visually improve the user experience in the final web application.
 
 ### Preprocessing
 
-Having gathered all the necessary data, I proceeded by cleaning and preprocessing the dataset.
+Having gathered all the necessary data, I proceeded with dataset cleaning and preprocessing.
 Each movie entry in the dataset listed many genres and actors, yet limiting both categories to the top three values proved to be sufficient while reducing noise.
-Even after removing stop words, including movie descriptions undermined performance during training and testing due to which they were removed as an input feature.
+Even after removing stop words, including movie descriptions undermined performance during training and testing due to which they were removed from the set of input features.
 
 ## Training
 
 Upon completion of data preprocessing, the movie and the rating dataset were merged by the movie IDs, thus obtaining the final dataset used in model training.
 Before settling for a XGBoost regression model, I initially experimented with random forest regressors and a deep learning approach.
 
-As the neural network was too computationally intense and did not provide substantial benefit, thus it was not a viable solution.
+As the neural network was too computationally intense and did not provide substantial benefit, it was not a viable solution.
 Random forest produced slightly worse results while increasing training times compared to XGBoost, making XGBoost the obvious choice for this project.
 
 The goal of the model was to minimize errors when predicting user ratings given the previously mentioned features.
@@ -85,7 +85,7 @@ The main bottleneck during this phase was RAM, as the datasets utilized were ext
 
 To provide a pleasant user experience, a simple web application was created.
 This part of the project was not my main focus; therefore, I did not implement many features as it primarily served as a medium to display results.
-I allowed the user to register and login on the website as well as rate various movies, thereby giving the model insight into the user's preferences.
+I allowed the user to register and login on the website as well as rate various movies, thereby giving the model insight into their preferences.
 Additionally, on the home page, users can adjust a temperature slider, a scaling factor to bias ranking diversity that affects the ranking score of the content.
 Decreasing the temperature gives higher precedence to movies similar to the user's preferences.
 In contrast, increasing the temperature leads to a more diverse selection of movies that should still be appealing to the user.
@@ -96,4 +96,4 @@ In contrast, increasing the temperature leads to a more diverse selection of mov
 - The user and movie data is stored in a local SQLite database.
 - I defined a user and media class that serve as an interface with the database.
 
-All the previously mentioned systems work together to offer the user a useful tool when looking for new viewing content.
+All the previously mentioned systems work together to offer users a useful tool when looking for new viewing content.
