@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Search Results for "{{ query }}"</h1>
+    
+    <!-- Filter Controls -->
+    <div class="mb-6 bg-gray-800 p-4 rounded-lg">
+        <h2 class="text-lg font-semibold mb-3">Filter by Match Type</h2>
+        <div class="flex flex-wrap gap-3">
+            <button onclick="filterResults('all')" 
+                    class="filter-btn active px-3 py-1 rounded-full bg-blue-600 text-white">
+                All Results
+            </button>
+            <button onclick="filterResults('Title')" 
+                    class="filter-btn px-3 py-1 rounded-full bg-green-600 text-white">
+                Title Matches
+            </button>
+            <button onclick="filterResults('Director')" 
+                    class="filter-btn px-3 py-1 rounded-full bg-blue-600 text-white">
+                Director Matches
+            </button>
+            <button onclick="filterResults('Actor')" 
+                    class="filter-btn px-3 py-1 rounded-full bg-purple-600 text-white">
+                Actor Matches
+            </button>
+            <button onclick="filterResults('Genre')" 
+                    class="filter-btn px-3 py-1 rounded-full bg-gray-600 text-white">
+                Genre Matches
+            </button>
+        </div>
+    </div>
+    
+    {% if media %}
+        <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {% for item in media %}
+                <a href="{{ url_for('media_details', media_id=item.media_id) }}" 
+                   class="media-card block" 
+                   data-reasons="{{ item.match_reasons|join(',') }}">
+                    <!-- Poster image if available -->
+                    {% if item.poster_path %}
+                    <div class="media-poster">
+                        <img src="{{ item.poster_path }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+                    </div>
+                    {% else %}
+                    <div class="media-poster bg-gray-700 flex items-center justify-center h-48">
+                        <i class="fas fa-film text-4xl text-gray-500"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">{{ item.title }}</h3>
+                        
+                        <!-- Match reasons badges -->
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            {% for reason in item.match_reasons %}
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                {% if reason == 'Director' %}bg-blue-600 text-blue-100
+                                {% elif reason == 'Actor' %}bg-purple-600 text-purple-100
+                                {% elif reason == 'Title' %}bg-green-600 text-green-100
+                                {% else %}bg-gray-600 text-gray-100{% endif %}">
+                                {{ reason }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        
+                        <p class="text-gray-400 text-sm">
+                            {{ item.director }} • {{ item.genres.split('|')[0] }}
+                        </p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-400">No media found matching "{{ query }}"</p>
+    {% endif %}
+</div>
+
+<script>
+function filterResults(filterType) {
+    const cards = document.querySelectorAll('.media-card');
+    const buttons = document.querySelectorAll('.filter-btn');
+    
+    // Update active button styling
+    buttons.forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('opacity-80');
+        if (btn.textContent.trim() === filterType || 
+            (filterType === 'all' && btn.textContent.trim() === 'All Results')) {
+            btn.classList.add('active');
+            btn.classList.remove('opacity-80');
+        }
+    });
+    
+    // Filter cards
+    cards.forEach(card => {
+        if (filterType === 'all') {
+            card.style.display = 'block';
+        } else {
+            const reasons = card.dataset.reasons.split(',');
+            card.style.display = reasons.includes(filterType) ? 'block' : 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

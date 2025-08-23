@@ -1,0 +1,74 @@
+{% extends "base.html" %} {% block content %}
+<h1 class="text-3xl font-bold mb-8">Recommended for you</h1>
+
+<div class="mb-8">
+  <!-- Temperature Slider -->
+  <div class="flex items-center gap-4 mb-4">
+    <span class="text-gray-400">More Diverse</span>
+    <input
+      type="range"
+      min="-1"
+      max="1"
+      step="0.1"
+      value="{{ current_temperature }}"
+      onchange="updateTemperature(this.value)"
+      class="w-64 accent-blue-500"
+    />
+    <span class="text-gray-400">More Focused</span>
+    <span id="tempValue" class="font-mono bg-gray-700 px-2 py-1 rounded">
+      {{ "%.1f"|format(current_temperature) }}
+    </span>
+  </div>
+</div>
+
+<script>
+  function updateTemperature(value) {
+    document.getElementById("tempValue").textContent =
+      parseFloat(value).toFixed(1);
+    window.location.search = `?temperature=${value}`;
+  }
+</script>
+
+<div
+  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+>
+  {% for media in recommendations %}
+  <div
+    class="media-card bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+  >
+    <a href="{{ url_for('media_details', media_id=media['media_id'], temperature=current_temperature) }}">
+      <div class="media-poster h-64 bg-gray-700 overflow-hidden">
+        {% if media.poster_path %}
+        <img
+          src="{{ media.poster_path }}"
+          alt="{{ media.title }} poster"
+          class="w-full h-full object-cover"
+        />
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center">
+          <i class="fas fa-film text-5xl text-gray-500"></i>
+        </div>
+        {% endif %}
+      </div>
+      <div class="p-4">
+        <h3 class="font-bold text-lg mb-1 truncate">{{ media['title'] }}</h3>
+        <p class="text-gray-400 text-sm mb-2">
+          {{ media['genres'].split('|')[0] }} • {{ media['director'] }}
+        </p>
+        <div class="flex items-center">
+          {% set stars = (media['final_score'] + 0.5) | int %}
+          {% for i in range(5) %}
+          <i class="fas fa-star text-{{ 'yellow-400' if i < stars else 'gray-500' }} text-sm"></i>
+          {% endfor %}
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %} {% if not recommendations %}
+  <p class="text-gray-400 col-span-full">
+    No recommendations available at the moment. Consider rating media you've
+    watched to improve your profile.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

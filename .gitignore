@@ -1,0 +1,10 @@
+/ml-latest-small/
+/ml-32m/
+__pycache__/
+.env
+*.db
+*.csv
+*.pkl
+*.pt
+*.npy
+/venv/

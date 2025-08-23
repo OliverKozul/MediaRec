@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold">Your Profile</h1>
+    {% if rated_media %}
+    <form
+      action="{{ url_for('delete_all_ratings') }}"
+      method="POST"
+      onsubmit="return confirm('Are you sure you want to delete ALL your ratings? This cannot be undone.');"
+    >
+      <button
+        type="submit"
+        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition"
+      >
+        <i class="fas fa-trash-alt mr-2"></i>Remove All Ratings
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- Preferences Visualization Section -->
+  <div class="bg-gray-800 rounded-lg p-6 mb-8 shadow-lg">
+    <h2 class="text-2xl font-semibold mb-6 text-purple-400">
+      Your Taste Profile
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Top Genres Chart -->
+      <div class="bg-gray-700 p-4 rounded-lg">
+        <h3 class="text-xl font-semibold mb-4">Top Genres</h3>
+        <div class="space-y-3">
+          {% for genre, score in preferences['Top Genres'].items() %}
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-medium">{{ genre }}</span>
+              <span class="text-sm text-gray-300"
+                >{{ "%.1f"|format(score) }}</span
+              >
+            </div>
+            <div class="w-full bg-gray-600 rounded-full h-2.5">
+              <div
+                class="bg-purple-500 h-2.5 rounded-full"
+                style="width: {{ (score/5)*100 }}%"
+              ></div>
+            </div>
+          </div>
+          {% endfor %} {% if not preferences['Top Genres'] %}
+          <p class="text-gray-400">
+            Rate more media to see your taste profile
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Top Directors Chart -->
+      <div class="bg-gray-700 p-4 rounded-lg">
+        <h3 class="text-xl font-semibold mb-4">Top Directors</h3>
+        <div class="space-y-3">
+          {% for director, score in preferences['Top Directors'].items() %}
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-medium">{{ director }}</span>
+              <span class="text-sm text-gray-300"
+                >{{ "%.1f"|format(score) }}</span
+              >
+            </div>
+            <div class="w-full bg-gray-600 rounded-full h-2.5">
+              <div
+                class="bg-blue-500 h-2.5 rounded-full"
+                style="width: {{ (score/5)*100 }}%"
+              ></div>
+            </div>
+          </div>
+          {% endfor %} {% if not preferences['Top Directors'] %}
+          <p class="text-gray-400">
+            Rate more media to see your taste profile
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Top Actors Chart -->
+      <div class="bg-gray-700 p-4 rounded-lg">
+        <h3 class="text-xl font-semibold mb-4">Top Actors</h3>
+        <div class="space-y-3">
+          {% for actor, score in preferences['Top Actors'].items() %}
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-medium">{{ actor }}</span>
+              <span class="text-sm text-gray-300"
+                >{{ "%.1f"|format(score) }}</span
+              >
+            </div>
+            <div class="w-full bg-gray-600 rounded-full h-2.5">
+              <div
+                class="bg-green-500 h-2.5 rounded-full"
+                style="width: {{ (score/5)*100 }}%"
+              ></div>
+            </div>
+          </div>
+          {% endfor %} {% if not preferences['Top Actors'] %}
+          <p class="text-gray-400">
+            Rate more media to see your taste profile
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rated Media Section -->
+  <div class="mb-8">
+    <h2 class="text-2xl font-semibold mb-4">Your Rated Media</h2>
+    {% if not rated_media %}
+    <p class="text-gray-400">You haven't rated any media yet.</p>
+    {% else %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for media in rated_media %}
+      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow relative">
+        <!-- Remove Rating Button -->
+        <form action="{{ url_for('delete_rating', media_id=media['media_id']) }}" method="POST" class="absolute top-2 right-2">
+          <button 
+            type="submit" 
+            class="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center transition-opacity opacity-70 hover:opacity-100"
+            onclick="return confirm('Remove your rating for {{ media['title'] }}?')"
+          >
+            <i class="fas fa-times text-xs"></i>
+          </button>
+        </form>
+        
+        <div class="p-4 pt-8">  <!-- Added pt-8 to account for button space -->
+          <h3 class="font-bold text-lg mb-1">{{ media['title'] }}</h3>
+          <div class="flex items-center mb-2">
+            {% for i in range(1, 6) %}
+            <span class="{{ 'text-yellow-400' if i <= media['rating'] else 'text-gray-500' }}">★</span>
+            {% endfor %}
+            <span class="ml-2 text-sm text-gray-400">{{ media['rating'] }}/5</span>
+          </div>
+          <p class="text-gray-400 text-sm truncate">
+            {{ media['description'] }}
+          </p>
+          <a
+            href="{{ url_for('media_details', media_id=media['media_id']) }}"
+            class="text-purple-400 hover:text-purple-300 text-sm mt-2 inline-block"
+          >
+            View Details
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

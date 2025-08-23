@@ -1,0 +1,145 @@
+{% extends "base.html" %} {% block content %}
+<div class="max-w-4xl mx-auto">
+  <div class="flex flex-col md:flex-row gap-8">
+    <!-- Poster Column -->
+    <div class="md:w-1/3">
+      <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+        {% if media.poster_path %}
+        <img
+          src="{{ media.poster_path }}"
+          alt="{{ media.title }} poster"
+          class="w-full h-auto object-contain"
+          style="max-height: 513px"
+        />
+        {% else %}
+        <div class="h-96 flex items-center justify-center bg-gray-700">
+          <i class="fas fa-film text-8xl text-gray-600"></i>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Details Column -->
+    <div class="md:w-2/3 space-y-6">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">{{ media['title'] }}</h1>
+        <div class="flex items-center mb-4">
+          <span class="bg-purple-600 text-xs px-2 py-1 rounded mr-2"
+            >{{ media['media_type'] }}</span
+          >
+          <span class="text-gray-400">{{ media['genres'] }}</span>
+        </div>
+      </div>
+
+      <!-- Recommendation Explanation Section -->
+      {% if explanation %}
+      <div class="bg-gray-800 rounded-lg p-4 shadow-md">
+        <h2 class="text-xl font-semibold mb-3 text-purple-400">
+          <i class="fas fa-lightbulb mr-2"></i>Why We Recommended This
+        </h2>
+
+        <!-- Model & User Score Summary -->
+        <div class="mb-4 p-3 bg-gray-700 rounded-lg">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <span class="font-medium">Model Predicted Rating:</span>
+              <span class="text-lg font-bold text-purple-300">
+                {{ "%.2f"|format(explanation['model_score']) }} / 5
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="font-medium">Unbiased Rating:</span>
+              <span class="text-lg font-bold text-blue-300">
+                {% set avg_user_rating = explanation['model_score'] - (explanation['explanation'].values() | sum) %}
+                {{ "%.2f"|format(avg_user_rating) }} / 5
+              </span>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-gray-400">
+            <i class="fas fa-robot text-purple-300 mr-1"></i>
+            <span>The model's prediction is based on your preferences and the following feature contributions:</span>
+          </div>
+        </div>
+
+        <!-- Individual Features -->
+        <div class="space-y-3">
+          {% for feature, score in explanation['explanation'].items() %} {% if
+          ']' in feature and feature.split('] ') | length > 1 %} {% set
+          feature_type = feature.split(']')[0][1:] %} {% set feature_text =
+          feature.split('] ')[1] %} {% else %} {% set feature_type = 'UNKNOWN'
+          %} {% set feature_text = feature %} {% endif %}
+
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <span class="text-sm font-medium">
+                {% if feature_type == 'GENRE' %}
+                <i class="fas fa-tag text-purple-400 mr-1"></i>
+                {% elif feature_type == 'DESC' %}
+                <i class="fas fa-align-left text-blue-400 mr-1"></i>
+                {% elif feature_type == 'ACTOR' %}
+                <i class="fas fa-user text-green-400 mr-1"></i>
+                {% elif feature_type == 'DIRECTOR' %}
+                <i class="fas fa-film text-yellow-400 mr-1"></i>
+                {% endif %} {{ feature_text }}
+                <span class="text-xs text-gray-500 ml-1">
+                  ({{ "%+.2f"|format(score) }})
+                </span>
+              </span>
+            </div>
+
+            <div class="w-24 flex items-center">
+              <div class="w-full bg-gray-700 rounded-full h-2.5 mr-2">
+                <div
+                  class="h-2.5 rounded-full {% if score > 0 %}bg-green-500{% else %}bg-red-500{% endif %}"
+                  style="width: {{ (score|abs)*100 }}%"
+                ></div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Description Section -->
+      <div class="bg-gray-800 rounded-lg p-4 shadow-md">
+        <h2 class="text-xl font-semibold mb-2">Description</h2>
+        <p class="text-gray-300">{{ media['description'] }}</p>
+      </div>
+
+      <!-- Details Section -->
+      <div class="bg-gray-800 rounded-lg p-4 shadow-md">
+        <h2 class="text-xl font-semibold mb-2">Details</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-gray-400">Director</p>
+            <p>{{ media['director'] or 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-gray-400">Actors</p>
+            <p>{{ media['actors'] or 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rating Section -->
+      <div class="bg-gray-800 rounded-lg p-4 shadow-md">
+        <h2 class="text-xl font-semibold mb-2">Your Rating</h2>
+        <div class="flex items-center space-x-2">
+          {% for i in range(1, 6) %}
+          <button
+            class="star-rating text-2xl {{ 'text-yellow-400' if user_rating and i <= user_rating else 'text-gray-500' }}"
+            data-rating="{{ i }}"
+            data-media-id="{{ media['media_id'] }}"
+            data-media-title="{{ media['title'] }}"
+          >
+            ★
+          </button>
+          {% endfor %} {% if user_rating %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

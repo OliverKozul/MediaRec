@@ -1,0 +1,116 @@
+
+body {
+    background-color: #111827;
+    color: white;
+}
+
+form {
+    background-color: #1f2937;
+    padding: 2rem;
+    border-radius: 0.5rem;
+}
+
+input {
+    background-color: #374151;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    width: 100%;
+    margin: 0.25rem;
+    margin-right: 0.5rem;
+    display: block;
+}
+
+button {
+    background-color: #7c3aed;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    width: 100%;
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    height: 6px;
+    background: #4b5563;
+    border-radius: 3px;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.media-card {
+    transition: all 0.3s ease;
+    display: block;
+    background-color: #1f2937;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    width: 230px;
+}
+.media-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.media-poster {
+    height: 0;
+    padding-bottom: 150%;
+    position: relative;
+    overflow: hidden;
+}
+.media-poster img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+.media-poster:hover img {
+    transform: scale(1.05);
+}
+
+.explanation-bar {
+    transition: width 0.5s ease;
+}
+
+.feature-icon {
+    width: 16px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+.star-rating {
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
+.star-rating:hover {
+    color: #fbbf24 !important;
+}
+
+.badge {
+    transition: all 0.2s ease;
+}
+.badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.filter-btn {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.filter-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+.filter-btn.active {
+    box-shadow: 0 0 0 2px white;
+}
