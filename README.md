@@ -46,7 +46,7 @@ To run this project locally, you need the following:
 
 # Implementation Details
 
-The following sections the steps I took when implementing this project.
+The following sections describe the steps I took when implementing this project.
 
 ## Data
 
@@ -54,40 +54,39 @@ To train the model used to predict user preferences, the [MovieLens 32M Dataset]
 The number of samples is excessive for the scope of this project and the capabilities of my computer but the data was up-to-date and proved extremely useful.
 
 MovieLens provided three tables: 
-  - movies.csv listed movies, with their respective IDs, titles and genres.
-  - links.csv linked the movie IDs with their IMDB and TMDB IDs.
-  - ratings.csv contained 32 million user ratings which were used for model training.
+  - movies.csv listing movies, with their respective IDs, titles and genres.
+  - links.csv linking the movie IDs with their IMDB and TMDB IDs.
+  - ratings.csv containing 32 million user ratings which were used for model training.
 
 ### Enrichment
 
-For the model to gain a broader context of user preferences, I wanted to provide it with other features except for movie genres.
-To this end, I utilized TMDB's generous developer API to fetch movie descriptions, actors and directors.
-Additionally, movie posters were also saved to improve the user experience with visuals in the final web application.
+To provide the model with a broader context of user preferences beyond movie genres, I utilized TMDB's generous developer API to fetch movie descriptions, actors and directors.
+Additionally, movie posters were also saved to visually improve the user experience in the final web application.
 
 ### Preprocessing
 
 Having gathered all the necessary data, I proceeded by cleaning and preprocessing the dataset.
-Each movie entry in the dataset listed many genres and actors, yet limiting both categories to the top three values proved to be sufficient and reduced noise.
-Even after removing stop words, movie descriptions appeared to cause worse results during training and testing, so they were removed as a feature.
+Each movie entry in the dataset listed many genres and actors, yet limiting both categories to the top three values proved to be sufficient while reducing noise.
+Even after removing stop words, including movie descriptions undermined performance during training and testing due to which they were removed as an input feature.
 
 ## Training
 
-After data preprocessing, the last step was to merge the movie and rating dataset by the movie IDs, therefore obtaining the final dataset used in model training.
+Upon completion of data preprocessing, the movie and the rating dataset were merged by the movie IDs, thus obtaining the final dataset used in model training.
 Before settling for a XGBoost regression model, I initially experimented with random forest regressors and a deep learning approach.
 
-The neural network was too computationally intense and did not provide substantial benefit, thus it was not a viable solution.
-Random forest offered slightly worse results and longer training times when compared to XGBoost, making XGBoost the obvious choice in this project.
+As the neural network was too computationally intense and did not provide substantial benefit, thus it was not a viable solution.
+Random forest produced slightly worse results while increasing training times compared to XGBoost, making XGBoost the obvious choice for this project.
 
-The goal of the model was to minimize the error when predicting a user rating given the previously mentioned features.
+The goal of the model was to minimize errors when predicting user ratings given the previously mentioned features.
 Modifying hyperparameters did not alter the results significantly, except for n_jobs, which decreased training time drastically by parallelizing the process.
 The main bottleneck during this phase was RAM, as the datasets utilized were extremely large.
 
 ## Web UI
 
 To provide a pleasant user experience, a simple web application was created.
-This part of the project was not my main focus, therefore I did not implement many features as it primarily served as a medium to display results.
-I allowed the user to register and login on the website and by rating movies using the profile the model would gain insight into the user's preferences.
-Additionally, the user can adjust a temperature slider, a scaling factor to bias ranking diversity, on the home page that affects the ranking score of the content.
+This part of the project was not my main focus; therefore, I did not implement many features as it primarily served as a medium to display results.
+I allowed the user to register and login on the website as well as rate various movies, thereby giving the model insight into the user's preferences.
+Additionally, on the home page, users can adjust a temperature slider, a scaling factor to bias ranking diversity that affects the ranking score of the content.
 Decreasing the temperature gives higher precedence to movies similar to the user's preferences.
 In contrast, increasing the temperature leads to a more diverse selection of movies that should still be appealing to the user.
 
