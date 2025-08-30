@@ -1,0 +1,32 @@
+Media DF frac = 0.5
+Ratings DF frac = 0.05
+Number of rows: 717787
+XGB
+
+2025-08-29 20:58:30,498 - ModelTrainer - Starting model training
+2025-08-29 21:00:10,814 - ModelTrainer - Mean Squared Error: 0.479
+2025-08-29 21:00:10,816 - ModelTrainer - Mean Absolute Error: 0.519
+2025-08-29 21:00:10,821 - ModelTrainer - R^2 Score: 0.561
+2025-08-29 21:00:10,821 - ModelTrainer - Performing 5-fold cross-validation
+2025-08-29 21:25:59,385 - ModelTrainer - CV MSE: 0.478
+2025-08-29 21:25:59,394 - ModelTrainer - CV MAE: 0.519
+2025-08-29 21:25:59,395 - ModelTrainer - CV R^2: 0.563
+2025-08-29 21:25:59,395 - ModelTrainer - Evaluating ranking metrics (Precision@10, Recall@10, MAP)
+2025-08-29 21:25:59,773 - ModelTrainer - Precision@10: 0.108
+2025-08-29 21:25:59,773 - ModelTrainer - Recall@10: 0.754
+2025-08-29 21:25:59,773 - ModelTrainer - MAP: 0.750
+
+RF
+
+2025-08-29 21:55:28,026 - ModelTrainer - Starting model training
+2025-08-29 22:15:07,948 - ModelTrainer - Mean Squared Error: 0.841
+2025-08-29 22:15:07,950 - ModelTrainer - Mean Absolute Error: 0.700
+2025-08-29 22:15:07,954 - ModelTrainer - R^2 Score: 0.230
+2025-08-29 22:15:07,954 - ModelTrainer - Performing 5-fold cross-validation
+2025-08-30 02:52:08,890 - ModelTrainer - CV MSE: 0.844
+2025-08-30 02:52:08,896 - ModelTrainer - CV MAE: 0.702
+2025-08-30 02:52:08,896 - ModelTrainer - CV R^2: 0.227
+2025-08-30 02:52:08,897 - ModelTrainer - Evaluating ranking metrics (Precision@10, Recall@10, MAP)
+2025-08-30 02:52:09,269 - ModelTrainer - Precision@10: 0.108
+2025-08-30 02:52:09,269 - ModelTrainer - Recall@10: 0.753
+2025-08-30 02:52:09,269 - ModelTrainer - MAP: 0.711

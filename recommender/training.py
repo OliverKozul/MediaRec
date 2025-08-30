@@ -2,12 +2,13 @@ import numpy as np
 import joblib
 import dask.dataframe as dd
 
+from sklearn.ensemble import RandomForestRegressor
 from tqdm import tqdm
 from core.logger import Logger
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, make_scorer
 from xgboost import XGBRegressor
 from recommender.engine import (
     RecommendationEngine,
@@ -24,6 +25,25 @@ from data.data_processor import (
     process_director
 )
 
+def precision_at_k(actual, predicted, k=10):
+    predicted_top_k = predicted[:k]
+    hits = len(set(predicted_top_k) & set(actual))
+    return hits / k
+
+def recall_at_k(actual, predicted, k=10):
+    predicted_top_k = predicted[:k]
+    hits = len(set(predicted_top_k) & set(actual))
+    return hits / len(actual) if actual else 0.0
+
+def average_precision(actual, predicted, k=10):
+    score = 0.0
+    hits = 0
+    for i, p in enumerate(predicted[:k], start=1):
+        if p in actual:
+            hits += 1
+            score += hits / i
+    return score / min(len(actual), k) if actual else 0.0
+
 class ModelTrainer:
     """Trainer class for building and evaluating the recommendation model."""
     def __init__(self, media_csv_path, ratings_csv_path):
@@ -37,7 +57,7 @@ class ModelTrainer:
     def load_data(self) -> None:
         self.logger.info("Loading datasets")
         media_df = dd.read_csv(self.media_csv_path).sample(frac=0.5, random_state=42).dropna(subset=["genres", "actors", "director", "description"])
-        ratings_df = dd.read_csv(self.ratings_csv_path).sample(frac=0.1, random_state=42).dropna(subset=["user_id", "media_id", "rating"])
+        ratings_df = dd.read_csv(self.ratings_csv_path).sample(frac=0.05, random_state=42).dropna(subset=["user_id", "media_id", "rating"])
         self.df = dd.merge(ratings_df, media_df, on="media_id").dropna()
         self.df = self.df.drop(columns=["description", "poster_path", "timestamp"])
         self.logger.info("Datasets successfully loaded and merged")
@@ -74,21 +94,6 @@ class ModelTrainer:
         self.engine.vectorizers["directors"] = tfidf_dir
         self.logger.info("Directors TfidfVectorizer fitted and saved")
 
-        # tfidf_desc = TfidfVectorizer(
-        #     max_features=250,
-        #     stop_words='english',
-        #     strip_accents='unicode',
-        #     ngram_range= (1, 3),
-        #     tokenizer=space_tokenizer,
-        #     preprocessor=identity_preprocessor,
-        #     token_pattern=None,
-        #     lowercase=True
-        # )
-        # tfidf_desc.fit(self.df["description"].compute())
-        # joblib.dump(tfidf_desc, DESC_VECTORIZER_PATH)
-        # self.engine.vectorizers["description"] = tfidf_desc
-        # self.logger.info("Description TfidfVectorizer fitted and saved")
-
     def load_vectorizers(self) -> None:
         self.logger.info("Loading pre-fitted vectorizers")
         self.engine.vectorizers = {
@@ -114,8 +119,9 @@ class ModelTrainer:
 
         X_combined = []
         y_combined = []
+        user_ids = []
 
-        for _, group in tqdm(grouped, desc="Building user training vectors"):
+        for uid, group in tqdm(grouped, desc="Building user training vectors"):
             liked = group[group["rating"] >= 4]
             if liked.empty:
                 continue
@@ -128,11 +134,16 @@ class ModelTrainer:
                 combined = np.hstack([user_profile, media_vector])
                 X_combined.append(combined)
                 y_combined.append(row["rating"])
+                user_ids.append(uid)
 
         X_combined = np.array(X_combined)
         y_combined = np.array(y_combined)
+        user_ids = np.array(user_ids)
 
-        X_train, X_test, y_train, y_test = train_test_split(X_combined, y_combined, stratify=y_combined, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test, user_train, user_test = train_test_split(
+            X_combined, y_combined, user_ids,
+            stratify=y_combined, test_size=0.2, random_state=42
+        )
 
         model = XGBRegressor(
             n_estimators=250,
@@ -154,12 +165,48 @@ class ModelTrainer:
         model.fit(X_train, y_train)
 
         y_pred = model.predict(X_test)
+
         self.logger.info(f"Mean Squared Error: {mean_squared_error(y_test, y_pred):.3f}")
         self.logger.info(f"Mean Absolute Error: {mean_absolute_error(y_test, y_pred):.3f}")
         self.logger.info(f"R^2 Score: {r2_score(y_test, y_pred):.3f}")
 
+        self.logger.info("Performing 5-fold cross-validation")
+        kf = KFold(n_splits=5, shuffle=True, random_state=42)
+        mse_cv = cross_val_score(model, X_combined, y_combined, cv=kf, scoring=make_scorer(mean_squared_error))
+        mae_cv = cross_val_score(model, X_combined, y_combined, cv=kf, scoring=make_scorer(mean_absolute_error))
+        r2_cv  = cross_val_score(model, X_combined, y_combined, cv=kf, scoring=make_scorer(r2_score))
+        self.logger.info(f"CV MSE: {mse_cv.mean():.3f}")
+        self.logger.info(f"CV MAE: {mae_cv.mean():.3f}")
+        self.logger.info(f"CV R^2: {r2_cv.mean():.3f}")
+
+        self.logger.info("Evaluating ranking metrics (Precision@10, Recall@10, MAP)")
+        results = self._evaluate_ranking(y_test, y_pred, user_test, k=10)
+        for metric, val in results.items():
+            self.logger.info(f"{metric}: {val:.3f}")
+
         joblib.dump(model, MODEL_PATH)
         self.logger.info(f"Model saved to {MODEL_PATH}")
+
+    def _evaluate_ranking(self, y_true, y_pred, user_ids, k=10):
+        precision_list, recall_list, ap_list = [], [], []
+
+        grouped = {}
+        for idx, uid in enumerate(user_ids):
+            grouped.setdefault(uid, []).append((y_true[idx], y_pred[idx], idx))
+
+        for uid, vals in grouped.items():
+            actual = [i for (true, _, i) in vals if true >= 4]
+            ranked = [i for (_, _, i) in sorted(vals, key=lambda x: x[1], reverse=True)]
+
+            precision_list.append(precision_at_k(actual, ranked, k))
+            recall_list.append(recall_at_k(actual, ranked, k))
+            ap_list.append(average_precision(actual, ranked, k))
+
+        return {
+            f"Precision@{k}": np.mean(precision_list),
+            f"Recall@{k}": np.mean(recall_list),
+            "MAP": np.mean(ap_list)
+        }
 
 if __name__ == "__main__":
     trainer = ModelTrainer(
