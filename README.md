@@ -52,11 +52,22 @@ The following sections describe the steps I took when implementing this project.
 
 To train the model used to predict user preferences, the [MovieLens 32M Dataset](https://grouplens.org/datasets/movielens/) was used.
 The number of samples is excessive for the scope of this project and the capabilities of my computer but the data was up-to-date and proved extremely useful.
+MovieLens does offer a dataset containing 1 million user ratings which would have been sufficient but it was not used due to the data being over 20 years old.
 
 MovieLens provided three tables: 
   - movies.csv listing movies, with their respective IDs, titles and genres.
   - links.csv linking the movie IDs with their IMDB and TMDB IDs.
   - ratings.csv containing 32 million user ratings which were used for model training.
+
+The limiting factor during training was my computer's RAM capacity as the sheer volume of textual information proved overwhelming.
+To be able to store all the data in memory, I had to randomly select a smaller portion of the whole dataset for training.
+Approximately 30000 different movies with 25 user ratings each was the maximum my 32 gigabytes of RAM could handle.
+The chosen subset comprised the following number of unique samples:
+  - 5000 directors
+  - 25000 actors
+  - 20 genres
+
+This data slice, while comparatively small, was sufficient in training a competent recommendation model.
 
 ### Enrichment
 
@@ -72,10 +83,14 @@ Even after removing stop words, including movie descriptions undermined performa
 ## Training
 
 Upon completion of data preprocessing, the movie and the rating dataset were merged by the movie IDs, thus obtaining the final dataset used in model training.
-Before settling for a XGBoost regression model, I initially experimented with random forest regressors and a deep learning approach.
+Before settling for a XGBoost regression model, I initially experimented with Random Forest regressors and a deep learning approach.
 
 As the neural network was too computationally intense and did not provide substantial benefit, it was not a viable solution.
-Random forest produced slightly worse results while increasing training times compared to XGBoost, making XGBoost the obvious choice for this project.
+Random Forest produced slightly worse results while increasing training times compared to XGBoost.
+Since the validity of movie recommendations is highly subjective, performance metrics for XGBoost and Random Forest were computed to mathematically determine a winner.
+As seen in the figure below, XGBoost prevailed in every category, therefore cementing itself as the obvious choice for this project.
+
+![Model Comparison](./data/model_comparison.png)
 
 The goal of the model was to minimize errors when predicting user ratings given the previously mentioned features.
 Modifying hyperparameters did not alter the results significantly, except for n_jobs, which decreased training time drastically by parallelizing the process.
